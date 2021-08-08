@@ -7,6 +7,11 @@ const DEFAULT_SEND_OPTIONS = {
     gas: 6000000
 };
 
+const SUDT_ID = '450'; // Replace this with SUDT ID received from depositing SUDT to Layer 2. This should be a number.
+const SUDT_NAME = 'NorthSea';
+const SUDT_SYMBOL = 'NSE';
+const SUDT_TOTAL_SUPPLY = 100000000000000000000n;
+
 export class NorthSeaTokenWrapper {
     web3: Web3;
 
@@ -38,6 +43,11 @@ export class NorthSeaTokenWrapper {
         return value;
     }
 
+    async getBalanceOf(account: string) {
+        const value = await this.contract.methods.balanceOf(account).call();
+        return value;
+    }
+
     async setTransferToken(fromAddress: string, toAddress: string, amount: number) {
         const tx = await this.contract.methods
             .transfer(toAddress, this.web3.utils.toWei(this.web3.utils.toBN(amount)))
@@ -53,7 +63,7 @@ export class NorthSeaTokenWrapper {
         const deployTx = await (this.contract
             .deploy({
                 data: NorthSeaTokenJSON.bytecode,
-                arguments: []
+                arguments: [SUDT_NAME, SUDT_SYMBOL, SUDT_TOTAL_SUPPLY, SUDT_ID]
             })
             .send({
                 ...DEFAULT_SEND_OPTIONS,

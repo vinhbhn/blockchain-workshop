@@ -56,6 +56,7 @@ export function App() {
     const [tokenName, setTokenName] = useState<string | undefined>();
     const [tokenSymbol, setTokenSymbol] = useState<string | undefined>();
     const [totalSupplyToken, setTotalSupplyToken] = useState<string | undefined>();
+    const [depositAddress, setDepositAddress] = useState<string | undefined>();
     const [addressInput, setAddressInput] = useState<string | undefined>();
     const [balanceOfAddr, setBalanceOfAddr] = useState<string | undefined>();
 
@@ -63,6 +64,11 @@ export function App() {
         if (accounts?.[0]) {
             const addressTranslator = new AddressTranslator();
             setPolyjuiceAddress(addressTranslator.ethAddressToGodwokenShortAddress(accounts?.[0]));
+            addressTranslator
+                .getLayer2DepositAddress(web3, (window as any).ethereum.selectedAddress)
+                .then(depositAddr => {
+                    setDepositAddress(depositAddr.addressString);
+                });
         } else {
             setPolyjuiceAddress(undefined);
         }
@@ -131,6 +137,11 @@ export function App() {
         setTokenName(value);
     }
 
+    async function getBalance() {
+        const value = await contract.getBalanceOf(addressInput);
+        setBalanceOfAddr(value);
+    }
+
     async function setExistingContractAddress(contractAddress: string) {
         const _contract = new NorthSeaTokenWrapper(web3);
         _contract.useDeployed(contractAddress.trim());
@@ -183,6 +194,13 @@ export function App() {
             Your Polyjuice address: <b>{polyjuiceAddress || ' - '}</b>
             <br />
             <br />
+            L2 Deposit address: <b>{depositAddress || ' - '}</b>
+            <br />
+            Deposit to L2 at:{' '}
+            <a href="https://force-bridge-test.ckbapp.dev/bridge/Ethereum/Nervos">Force Bridge</a>
+            . Please fill the Receiver address with your L2 Deposit address on the above.
+            <br />
+            <br />
             Nervos Layer 2 balance:{' '}
             <b>{l2Balance ? (l2Balance / 10n ** 8n).toString() : <LoadingIndicator />} CKB</b>
             <br />
@@ -226,6 +244,17 @@ export function App() {
             {totalSupplyToken ? (
                 <>&nbsp;Total Supply: {web3.utils.fromWei(totalSupplyToken)}</>
             ) : null}
+            <br />
+            <br />
+            <input
+                type="text"
+                placeholder="Address"
+                onChange={e => setAddressInput(e.target.value)}
+            />{' '}
+            <button onClick={getBalance} disabled={!contract}>
+                Get balance
+            </button>
+            {balanceOfAddr ? <>&nbsp;Balance: {web3.utils.fromWei(balanceOfAddr)}</> : null}
             <br />
             <br />
             <input

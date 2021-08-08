@@ -1,6 +1,9 @@
 body {
-    padding: 40px;
-    font-size: larger;
+    padding: 50px;
+    font-size: large;
+    max-width: fit-content;
+    height: fit-content;
+    word-break: break-all;
 }
 
 .rotating-icon {
