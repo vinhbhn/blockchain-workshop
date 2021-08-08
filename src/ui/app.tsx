@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-use-before-define */
@@ -9,12 +10,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { PolyjuiceHttpProvider } from '@polyjuice-provider/web3';
 import { AddressTranslator } from 'nervos-godwoken-integration';
 
-import { SimpleStorageWrapper } from '../lib/contracts/SimpleStorageWrapper';
+import { NorthSeaTokenWrapper } from '../lib/contracts/NorthSeaTokenWrapper';
 import { CONFIG } from '../config';
 
 async function createWeb3() {
     // Modern dapp browsers...
-    if ((window as any).ethereum) {
+    const { ethereum } = window as any;
+    if (ethereum && ethereum.isMetaMask) {
         const godwokenRpcUrl = CONFIG.WEB3_PROVIDER_URL;
         const providerConfig = {
             rollupTypeHash: CONFIG.ROLLUP_TYPE_HASH,
@@ -27,7 +29,7 @@ async function createWeb3() {
 
         try {
             // Request account access if needed
-            await (window as any).ethereum.enable();
+            await ethereum.request({ method: 'eth_requestAccounts' });
         } catch (error) {
             // User denied account access...
         }
@@ -41,18 +43,21 @@ async function createWeb3() {
 
 export function App() {
     const [web3, setWeb3] = useState<Web3>(null);
-    const [contract, setContract] = useState<SimpleStorageWrapper>();
+    const [contract, setContract] = useState<NorthSeaTokenWrapper>();
     const [accounts, setAccounts] = useState<string[]>();
     const [l2Balance, setL2Balance] = useState<bigint>();
     const [existingContractIdInputValue, setExistingContractIdInputValue] = useState<string>();
-    const [storedValue, setStoredValue] = useState<number | undefined>();
     const [deployTxHash, setDeployTxHash] = useState<string | undefined>();
     const [polyjuiceAddress, setPolyjuiceAddress] = useState<string | undefined>();
     const [transactionInProgress, setTransactionInProgress] = useState(false);
     const toastId = React.useRef(null);
-    const [newStoredNumberInputValue, setNewStoredNumberInputValue] = useState<
-        number | undefined
-    >();
+    const [toAddressInputValue, setToAddressInputValue] = useState<string>();
+    const [amountInputValue, setAmountInputValue] = useState<number>();
+    const [tokenName, setTokenName] = useState<string | undefined>();
+    const [tokenSymbol, setTokenSymbol] = useState<string | undefined>();
+    const [totalSupplyToken, setTotalSupplyToken] = useState<string | undefined>();
+    const [addressInput, setAddressInput] = useState<string | undefined>();
+    const [balanceOfAddr, setBalanceOfAddr] = useState<string | undefined>();
 
     useEffect(() => {
         if (accounts?.[0]) {
@@ -87,7 +92,7 @@ export function App() {
     const account = accounts?.[0];
 
     async function deployContract() {
-        const _contract = new SimpleStorageWrapper(web3);
+        const _contract = new NorthSeaTokenWrapper(web3);
 
         try {
             setDeployTxHash(undefined);
@@ -111,29 +116,33 @@ export function App() {
         }
     }
 
-    async function getStoredValue() {
-        const value = await contract.getStoredValue(account);
-        toast('Successfully read latest stored value.', { type: 'success' });
+    async function getTotalSupplyToken() {
+        const value = await contract.getTotalSupply();
+        setTotalSupplyToken(value);
+    }
 
-        setStoredValue(value);
+    async function getTokenSymbolValue() {
+        const value = await contract.getTokenSymbol();
+        setTokenSymbol(value);
+    }
+
+    async function getTokenNameValue() {
+        const value = await contract.getTokenName();
+        setTokenName(value);
     }
 
     async function setExistingContractAddress(contractAddress: string) {
-        const _contract = new SimpleStorageWrapper(web3);
+        const _contract = new NorthSeaTokenWrapper(web3);
         _contract.useDeployed(contractAddress.trim());
 
         setContract(_contract);
-        setStoredValue(undefined);
     }
 
-    async function setNewStoredValue() {
+    async function setTransferTokenAmount() {
         try {
             setTransactionInProgress(true);
-            await contract.setStoredValue(newStoredNumberInputValue, account);
-            toast(
-                'Successfully set latest stored value. You can refresh the read value now manually.',
-                { type: 'success' }
-            );
+            await contract.setTransferToken(account, toAddressInputValue, amountInputValue);
+            toast('Successfully tranfer token', { type: 'success' });
         } catch (error) {
             console.error(error);
             toast.error(
@@ -182,13 +191,7 @@ export function App() {
             Deploy transaction hash: <b>{deployTxHash || '-'}</b>
             <br />
             <hr />
-            <p>
-                The button below will deploy a SimpleStorage smart contract where you can store a
-                number value. By default the initial stored value is equal to 123 (you can change
-                that in the Solidity smart contract). After the contract is deployed you can either
-                read stored value from smart contract or set a new one. You can do that using the
-                interface below.
-            </p>
+            <p>The button below will deploy a ERC20 token.</p>
             <button onClick={deployContract} disabled={!l2Balance}>
                 Deploy contract
             </button>
@@ -205,21 +208,39 @@ export function App() {
             </button>
             <br />
             <br />
-            <button onClick={getStoredValue} disabled={!contract}>
-                Get stored value
+            <button onClick={getTokenNameValue} disabled={!contract}>
+                Get token name
             </button>
-            {storedValue ? <>&nbsp;&nbsp;Stored value: {storedValue.toString()}</> : null}
+            {tokenName ? <>&nbsp;Token Name: {tokenName}</> : null}
+            <br />
+            <br />
+            <button onClick={getTokenSymbolValue} disabled={!contract}>
+                Get token symbol
+            </button>
+            {tokenSymbol ? <>&nbsp;Token Symbol: {tokenSymbol}</> : null}
+            <br />
+            <br />
+            <button onClick={getTotalSupplyToken} disabled={!contract}>
+                Get total supply
+            </button>
+            {totalSupplyToken ? (
+                <>&nbsp;Total Supply: {web3.utils.fromWei(totalSupplyToken)}</>
+            ) : null}
             <br />
             <br />
             <input
-                type="number"
-                onChange={e => setNewStoredNumberInputValue(parseInt(e.target.value, 10))}
-            />
-            <button onClick={setNewStoredValue} disabled={!contract}>
-                Set new stored value
+                type="text"
+                placeholder="To Address"
+                onChange={e => setToAddressInputValue(e.target.value)}
+            />{' '}
+            <input
+                type="text"
+                placeholder="Amount"
+                onChange={e => setAmountInputValue(Number(e.target.value))}
+            />{' '}
+            <button onClick={setTransferTokenAmount} disabled={!contract}>
+                Transfer
             </button>
-            <br />
-            <br />
             <br />
             <br />
             <hr />
