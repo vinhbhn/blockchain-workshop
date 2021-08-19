@@ -1,22 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Web3 from 'web3';
-import * as NorthSeaTokenJSON from '../../../build/contracts/NorthSeaToken.json';
-import { NorthSeaToken } from '../../types/NorthSeaToken';
+import * as MyERC20TokenJSON from '../../../build/contracts/MyERC20Token.json';
+import { MyERC20Token } from '../../types/MyERC20Token';
 
 const DEFAULT_SEND_OPTIONS = {
     gas: 6000000
 };
 
-export class NorthSeaTokenWrapper {
+export class MyERC20TokenWrapper {
     web3: Web3;
 
-    contract: NorthSeaToken;
+    contract: MyERC20Token;
 
     address: string;
 
     constructor(web3: Web3) {
         this.web3 = web3;
-        this.contract = new web3.eth.Contract(NorthSeaTokenJSON.abi as any) as any;
+        this.contract = new web3.eth.Contract(MyERC20TokenJSON.abi as any) as any;
     }
 
     get isDeployed() {
@@ -52,7 +52,7 @@ export class NorthSeaTokenWrapper {
     async deploy(fromAddress: string) {
         const deployTx = await (this.contract
             .deploy({
-                data: NorthSeaTokenJSON.bytecode,
+                data: MyERC20TokenJSON.bytecode,
                 arguments: []
             })
             .send({

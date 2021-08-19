@@ -10,7 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { PolyjuiceHttpProvider } from '@polyjuice-provider/web3';
 import { AddressTranslator } from 'nervos-godwoken-integration';
 
-import { NorthSeaTokenWrapper } from '../lib/contracts/NorthSeaTokenWrapper';
+import { MyERC20TokenWrapper } from '../lib/contracts/MyERC20TokenWrapper';
 import { CONFIG } from '../config';
 
 async function createWeb3() {
@@ -43,7 +43,7 @@ async function createWeb3() {
 
 export function App() {
     const [web3, setWeb3] = useState<Web3>(null);
-    const [contract, setContract] = useState<NorthSeaTokenWrapper>();
+    const [contract, setContract] = useState<MyERC20TokenWrapper>();
     const [accounts, setAccounts] = useState<string[]>();
     const [l2Balance, setL2Balance] = useState<bigint>();
     const [existingContractIdInputValue, setExistingContractIdInputValue] = useState<string>();
@@ -92,7 +92,7 @@ export function App() {
     const account = accounts?.[0];
 
     async function deployContract() {
-        const _contract = new NorthSeaTokenWrapper(web3);
+        const _contract = new MyERC20TokenWrapper(web3);
 
         try {
             setDeployTxHash(undefined);
@@ -132,7 +132,7 @@ export function App() {
     }
 
     async function setExistingContractAddress(contractAddress: string) {
-        const _contract = new NorthSeaTokenWrapper(web3);
+        const _contract = new MyERC20TokenWrapper(web3);
         _contract.useDeployed(contractAddress.trim());
 
         setContract(_contract);
