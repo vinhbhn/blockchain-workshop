@@ -7,7 +7,7 @@ import Web3 from 'web3';
 import { ToastContainer, toast } from 'react-toastify';
 import './app.scss';
 import 'react-toastify/dist/ReactToastify.css';
-import { AddressTranslator } from 'nervos-godwoken-integration';
+
 
 import { MyERC20TokenWrapper } from '../lib/contracts/MyERC20TokenWrapper';
 
@@ -37,7 +37,7 @@ export function App() {
     const [l2Balance, setL2Balance] = useState<bigint>();
     const [existingContractIdInputValue, setExistingContractIdInputValue] = useState<string>();
     const [deployTxHash, setDeployTxHash] = useState<string | undefined>();
-    const [polyjuiceAddress, setPolyjuiceAddress] = useState<string | undefined>();
+    const [polyjuiceAddr, setPolyjuiceAddress] = useState<string | undefined>();
     const [transactionInProgress, setTransactionInProgress] = useState(false);
     const toastId = React.useRef(null);
     const [toAddressInputValue, setToAddressInputValue] = useState<string>();
@@ -48,8 +48,9 @@ export function App() {
 
     useEffect(() => {
         if (accounts?.[0]) {
-            const addressTranslator = new AddressTranslator();
-            setPolyjuiceAddress(addressTranslator.ethAddressToGodwokenShortAddress(accounts?.[0]));
+            const ethereumAddress = accounts?.[0];
+            // insert addressTranslator
+            setPolyjuiceAddress(polyjuiceAddress);
         } else {
             setPolyjuiceAddress(undefined);
         }
@@ -167,7 +168,7 @@ export function App() {
             Your ETH address: <b>{accounts?.[0]}</b>
             <br />
             <br />
-            Your Polyjuice address: <b>{polyjuiceAddress || ' - '}</b>
+            Your Polyjuice address: <b>{polyjuiceAddr || ' - '}</b>
             <br />
             <br />
             Nervos Layer 2 balance:{' '}
