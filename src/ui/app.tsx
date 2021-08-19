@@ -7,29 +7,18 @@ import Web3 from 'web3';
 import { ToastContainer, toast } from 'react-toastify';
 import './app.scss';
 import 'react-toastify/dist/ReactToastify.css';
-import { PolyjuiceHttpProvider } from '@polyjuice-provider/web3';
 import { AddressTranslator } from 'nervos-godwoken-integration';
 
 import { MyERC20TokenWrapper } from '../lib/contracts/MyERC20TokenWrapper';
-import { CONFIG } from '../config';
 
 async function createWeb3() {
     // Modern dapp browsers...
-    const { ethereum } = window as any;
-    if (ethereum && ethereum.isMetaMask) {
-        const godwokenRpcUrl = CONFIG.WEB3_PROVIDER_URL;
-        const providerConfig = {
-            rollupTypeHash: CONFIG.ROLLUP_TYPE_HASH,
-            ethAccountLockCodeHash: CONFIG.ETH_ACCOUNT_LOCK_CODE_HASH,
-            web3Url: godwokenRpcUrl
-        };
-
-        const provider = new PolyjuiceHttpProvider(godwokenRpcUrl, providerConfig);
-        const web3 = new Web3(provider || Web3.givenProvider);
+    if ((window as any).ethereum && (window as any).ethereum.isMetaMask) {
+        const web3 = new Web3((window as any).ethereum);
 
         try {
             // Request account access if needed
-            await ethereum.request({ method: 'eth_requestAccounts' });
+            await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
         } catch (error) {
             // User denied account access...
         }
@@ -56,8 +45,6 @@ export function App() {
     const [tokenName, setTokenName] = useState<string | undefined>();
     const [tokenSymbol, setTokenSymbol] = useState<string | undefined>();
     const [totalSupplyToken, setTotalSupplyToken] = useState<string | undefined>();
-    const [addressInput, setAddressInput] = useState<string | undefined>();
-    const [balanceOfAddr, setBalanceOfAddr] = useState<string | undefined>();
 
     useEffect(() => {
         if (accounts?.[0]) {
